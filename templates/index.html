@@ -1,0 +1,2825 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CV Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  :focus-visible { outline: 2px solid #818cf8; outline-offset: 2px; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #090d16;
+    color: #f1f5f9;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  button, input, textarea { font-family: inherit; }
+
+  /* ================= APP SHELL ================= */
+  .app {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ================= SIDEBAR ================= */
+  .sidebar {
+    width: 272px;
+    flex-shrink: 0;
+    background: #0c1220;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+    padding: 18px 14px;
+    transition: margin-left 0.25s ease;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 6px 18px;
+  }
+
+  .brand-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .brand-name { font-size: 15px; font-weight: 700; color: #ffffff; letter-spacing: -0.2px; }
+  .brand-sub { font-size: 11.5px; color: #64748b; margin-top: 1px; }
+
+  .new-chat-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .new-chat-form input {
+    flex: 1;
+    min-width: 0;
+    background: #141f36;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #f1f5f9;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  .new-chat-form input::placeholder { color: #5b6982; }
+  .new-chat-form input:focus { outline: none; border-color: #6366f1; }
+
+  .icon-btn {
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: transparent;
+    color: #94a3b8;
+    padding: 0;
+    transition: all 0.15s ease;
+  }
+
+  .new-chat-submit {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #fff;
+    border-radius: 10px;
+  }
+  .new-chat-submit:hover { filter: brightness(1.08); }
+
+  .sidebar-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #4b5568;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0 8px 8px;
+  }
+
+  .session-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-right: -6px;
+    padding-right: 6px;
+  }
+  .session-list::-webkit-scrollbar { width: 6px; }
+  .session-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+  .session-row {
+    position: relative;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+  }
+  .session-row:hover { background: rgba(255, 255, 255, 0.035); }
+  .session-row.active { background: rgba(99, 102, 241, 0.14); }
+
+  .session-link {
+    flex: 1;
+    min-width: 0;
+    text-decoration: none;
+    color: #cbd5e1;
+    font-size: 13.5px;
+    font-weight: 500;
+    padding: 9px 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .session-row.active .session-link { color: #ffffff; font-weight: 600; }
+
+  .session-actions {
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    padding-right: 4px;
+  }
+  .session-row:hover .session-actions,
+  .session-row.editing .session-actions { opacity: 1; }
+
+  .session-actions .icon-btn { width: 26px; height: 26px; }
+  .session-actions .icon-btn:hover { background: rgba(255, 255, 255, 0.08); color: #f1f5f9; }
+  .session-actions .icon-btn.danger:hover { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+  .rename-form {
+    display: none;
+    flex: 1;
+    gap: 6px;
+    padding: 3px;
+  }
+  .session-row.editing .rename-form { display: flex; }
+  .session-row.editing .session-link,
+  .session-row.editing .session-actions { display: none; }
+
+  .rename-form input {
+    flex: 1;
+    min-width: 0;
+    background: #141f36;
+    border: 1px solid #6366f1;
+    color: #fff;
+    border-radius: 8px;
+    padding: 7px 9px;
+    font-size: 13px;
+  }
+  .rename-form input:focus { outline: none; }
+  .rename-form button {
+    background: #6366f1;
+    border: none;
+    color: #fff;
+    border-radius: 8px;
+    width: 30px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .empty-sessions {
+    font-size: 12.5px;
+    color: #4b5568;
+    padding: 10px 8px;
+    line-height: 1.5;
+  }
+
+  .sidebar-footer {
+    padding-top: 12px;
+    margin-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .notes-toggle,
+  .upload-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #141f36;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    color: #cbd5e1;
+    border-radius: 11px;
+    padding: 11px 13px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .notes-toggle:hover,
+  .upload-toggle:hover { border-color: rgba(99, 102, 241, 0.4); color: #fff; }
+  .notes-toggle .count {
+    margin-left: auto;
+    background: rgba(99, 102, 241, 0.2);
+    color: #a5b4fc;
+    border-radius: 999px;
+    font-size: 11.5px;
+    padding: 2px 8px;
+    font-weight: 700;
+  }
+
+  /* ================= MAIN ================= */
+  .main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  .topbar {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+  }
+
+  .menu-btn {
+    width: 36px; height: 36px;
+    background: #141f36;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 9px;
+    color: #cbd5e1;
+  }
+
+  .main-scroll {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .wrap {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 44px 24px 24px;
+  }
+
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 28px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding-bottom: 20px;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle { color: #94a3b8; font-size: 14.5px; margin: 0; }
+
+  .session-title-pill {
+    font-size: 12.5px;
+    color: #818cf8;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: 999px;
+    padding: 6px 14px;
+    white-space: nowrap;
+  }
+
+  /* ================= FLASH MESSAGES ================= */
+  .flash-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .flash-msg {
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    border: 1px solid transparent;
+  }
+  .flash-success {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #34d399;
+  }
+  .flash-error {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+  }
+
+  .composer {
+    position: sticky;
+    bottom: 0;
+    background: #090d16;
+    padding-top: 8px;
+  }
+
+  .card {
+    background: #111a2e;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    margin-bottom: 32px;
+  }
+
+  form.ask-form { display: flex; gap: 12px; align-items: center; }
+
+  textarea {
+    flex: 1;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    resize: none;
+    height: 52px;
+    padding: 14px 16px;
+    font-size: 14.5px;
+    color: #ffffff;
+    background: #17243c;
+    transition: all 0.25s ease;
+  }
+
+  textarea::placeholder { color: #64748b; }
+  textarea:focus { outline: none; border-color: #6366f1; background: #1c2c4c; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
+
+  button.primary, .composer .card button[type="submit"] {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 0 28px;
+    height: 52px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    transition: all 0.2s ease;
+  }
+  button.primary:hover, .composer .card button[type="submit"]:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4); }
+
+  /* New Voice Buttons Style */
+  .voice-btn {
+    background: #17243c;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    color: #818cf8;
+    border-radius: 12px;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+  .voice-btn:hover { background: rgba(99, 102, 241, 0.15); border-color: #6366f1; }
+  .voice-btn.recording { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #f87171; animation: pulse 1.5s infinite; }
+  .voice-btn.active-chat { background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #34d399; }
+
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  /* --- Chat history --- */
+  .chat { display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px; }
+
+  .bubble {
+    border-radius: 16px;
+    padding: 16px 20px;
+    font-size: 14.5px;
+    line-height: 1.6;
+    max-width: 88%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  }
+
+  .bubble.user {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #ffffff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+
+  .bubble.assistant {
+    background: #111a2e;
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+
+  .bubble-role {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #64748b;
+    margin-bottom: 6px;
+  }
+  .bubble.user .bubble-role { color: rgba(255,255,255,0.7); }
+
+  .empty-chat {
+    text-align: center;
+    color: #4b5568;
+    font-size: 13.5px;
+    padding: 60px 20px;
+    border: 1px dashed rgba(255,255,255,0.08);
+    border-radius: 16px;
+    margin-bottom: 32px;
+  }
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 36px 0 12px;
+  }
+
+  .evidence-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .evidence-card {
+    background: #111a2e;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 18px 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .evidence-file { font-size: 14px; font-weight: 600; margin-bottom: 6px; color: #818cf8; }
+  .evidence-snippet { font-size: 14px; color: #94a3b8; line-height: 1.6; font-style: italic; }
+
+  /* Task 14: زر تصدير التقرير كـ PDF */
+  .export-form { margin: 14px 0 6px; }
+  .export-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #4338ca, #6366f1);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.35);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .export-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(79, 70, 229, 0.45); }
+
+  /* Part 3: كرت اقتراح إجراء من الـ Agent (Approve/Cancel) */
+  .proposed-action-card {
+    background: #17243c;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin: 14px 0 6px;
+  }
+  .proposed-action-card .title { font-size: 12.5px; font-weight: 700; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .proposed-action-card .row { font-size: 13.5px; color: #e2e8f0; margin-bottom: 4px; }
+  .proposed-action-card .row .k { color: #64748b; margin-right: 6px; }
+  .proposed-action-actions { display: flex; gap: 10px; margin-top: 14px; }
+  .btn-approve {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff; border: none; border-radius: 10px; padding: 9px 18px;
+    font-size: 13.5px; font-weight: 600; cursor: pointer;
+  }
+  .btn-cancel-action {
+    background: rgba(255,255,255,0.06); color: #cbd5e1; border: none;
+    border-radius: 10px; padding: 9px 18px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  }
+
+  details {
+    margin-top: 32px;
+    background: #111a2e;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 16px 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  summary { cursor: pointer; font-size: 14px; font-weight: 600; color: #cbd5e1; outline: none; }
+
+  .step { border-top: 1px solid rgba(255, 255, 255, 0.06); padding: 14px 0; font-size: 13.5px; color: #94a3b8; }
+  .step:first-of-type { border-top: none; padding-top: 16px; }
+
+  .step-row { margin-bottom: 6px; }
+  .step-row .k { color: #64748b; margin-right: 8px; font-weight: 500; }
+
+  .conf-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 999px;
+  }
+  .conf-high { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+  .conf-med  { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+  .conf-low  { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+  .compare-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .compare-card {
+    background: #111a2e;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+  .compare-card:hover { border-color: rgba(99, 102, 241, 0.3); transform: translateY(-2px); }
+
+  .compare-name { font-size: 16px; font-weight: 700; margin-bottom: 10px; color: #ffffff; }
+
+  .compare-points {
+    margin: 0 0 14px;
+    padding-left: 18px;
+    font-size: 13.5px;
+    color: #94a3b8;
+    line-height: 1.6;
+  }
+  .compare-points li { margin-bottom: 6px; }
+
+  .compare-source {
+    font-size: 12px;
+    color: #64748b;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 10px;
+  }
+
+  .suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+
+  .suggestion-chip {
+    background: #17243c;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    color: #818cf8;
+    border-radius: 999px;
+    padding: 9px 18px;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .suggestion-chip:hover { background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.5); transform: translateY(-1px); }
+
+  /* ================= NOTES DRAWER ================= */
+  .notes-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 6, 12, 0.6);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 40;
+  }
+  body.notes-open .notes-backdrop,
+  body.upload-open .notes-backdrop { opacity: 1; pointer-events: auto; }
+
+  .notes-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 400px;
+    max-width: 92vw;
+    background: #0c1220;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: -20px 0 50px rgba(0,0,0,0.4);
+    z-index: 41;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+  }
+  body.notes-open .notes-drawer { transform: translateX(0); }
+
+  .notes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 22px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+  }
+  .notes-header h2 { font-size: 16px; font-weight: 700; margin: 0; color: #fff; }
+  .notes-close {
+    width: 32px; height: 32px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .notes-close:hover { background: rgba(255,255,255,0.07); color: #fff; }
+
+  .notes-body { flex: 1; overflow-y: auto; padding: 20px 22px; }
+
+  .note-add-card {
+    background: #111a2e;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 22px;
+  }
+  .note-add-card label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .note-add-card input,
+  .note-add-card textarea {
+    width: 100%;
+    background: #17243c;
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 9px;
+    color: #f1f5f9;
+    padding: 10px 12px;
+    font-size: 13.5px;
+    margin-bottom: 12px;
+  }
+  .note-add-card input:focus,
+  .note-add-card textarea:focus { outline: none; border-color: #6366f1; }
+  .note-add-card textarea { min-height: 72px; resize: vertical; }
+
+  .note-add-card button {
+    width: 100%;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    font-size: 13.5px;
+    border-radius: 9px;
+    padding: 10px;
+    cursor: pointer;
+  }
+  .note-add-card button:hover { filter: brightness(1.08); }
+
+  .notes-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .note-card {
+    background: #111a2e;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 13px;
+    padding: 15px 16px;
+  }
+  .note-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .note-candidate { font-size: 13.5px; font-weight: 700; color: #a5b4fc; }
+  .note-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .note-actions .icon-btn { width: 26px; height: 26px; background: rgba(255,255,255,0.03); }
+  .note-actions .icon-btn:hover { background: rgba(255,255,255,0.09); color: #fff; }
+  .note-actions .icon-btn.danger:hover { background: rgba(239,68,68,0.15); color: #f87171; }
+
+  .note-text { font-size: 13.5px; color: #cbd5e1; line-height: 1.55; }
+
+  .note-edit-form { display: none; }
+  .note-card.editing .note-text { display: none; }
+  .note-card.editing .note-edit-form { display: block; }
+  .note-edit-form textarea {
+    width: 100%;
+    background: #17243c;
+    border: 1px solid #6366f1;
+    border-radius: 9px;
+    color: #f1f5f9;
+    padding: 9px 11px;
+    font-size: 13.5px;
+    min-height: 64px;
+    resize: vertical;
+    margin-bottom: 8px;
+  }
+  .note-edit-form textarea:focus { outline: none; }
+  .note-edit-actions { display: flex; gap: 8px; }
+  .note-edit-actions button {
+    border: none;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .note-save-btn { background: #6366f1; color: #fff; }
+  .note-cancel-btn { background: rgba(255,255,255,0.06); color: #cbd5e1; }
+
+  .empty-notes {
+    text-align: center;
+    color: #4b5568;
+    font-size: 12.5px;
+    padding: 30px 10px;
+  }
+
+  /* ================= UPLOAD DRAWER ================= */
+  .upload-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 400px;
+    max-width: 92vw;
+    background: #0c1220;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: -20px 0 50px rgba(0,0,0,0.4);
+    z-index: 41;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+  }
+  body.upload-open .upload-drawer { transform: translateX(0); }
+
+  .upload-dropzone {
+    border: 2px dashed rgba(99, 102, 241, 0.35);
+    border-radius: 14px;
+    padding: 32px 18px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: #111a2e;
+  }
+  .upload-dropzone:hover,
+  .upload-dropzone.drag-over {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.06);
+  }
+  .upload-dropzone svg { margin: 0 auto 10px; color: #818cf8; }
+  .upload-dropzone .main-txt { font-size: 13.5px; font-weight: 600; color: #e2e8f0; margin-bottom: 4px; }
+  .upload-dropzone .sub-txt { font-size: 12px; color: #64748b; }
+  .upload-dropzone input[type="file"] { display: none; }
+
+  .upload-file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 16px 0;
+  }
+  .upload-file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #111a2e;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 9px;
+    padding: 9px 12px;
+    font-size: 13px;
+    color: #cbd5e1;
+  }
+  .upload-file-item .name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .upload-file-item .remove-btn {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .upload-file-item .remove-btn:hover { color: #f87171; }
+
+  .upload-submit-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    font-size: 13.5px;
+    border-radius: 9px;
+    padding: 12px;
+    cursor: pointer;
+  }
+  .upload-submit-btn:hover { filter: brightness(1.08); }
+  .upload-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .upload-note {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.5;
+    margin-top: 14px;
+  }
+
+  /* ================= MOBILE ================= */
+  @media (max-width: 860px) {
+    .topbar { display: flex; }
+
+    .sidebar {
+      position: fixed;
+      top: 0; bottom: 0; left: 0;
+      z-index: 50;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+    }
+    body.sidebar-open .sidebar { transform: translateX(0); }
+
+    body.sidebar-open .notes-backdrop,
+    body.sidebar-open::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 6, 12, 0.6);
+      z-index: 45;
+    }
+
+    .wrap { padding: 24px 16px; }
+    form.ask-form { flex-direction: column; }
+    button.primary { width: 100%; height: 46px; }
+    .top-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .notes-drawer, .upload-drawer { width: 100%; max-width: 100%; }
+  }
+
+  .lang-toggle-btn {
+  background: #17243c;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #818cf8;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.lang-toggle-btn:hover { background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.5); }
+.lang-toggle-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.bubble.rtl-text { direction: rtl; text-align: right; }
+
+  svg { display: block; }
+  
+</style>
+</head>
+<body>
+
+  <div class="app">
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">CV</div>
+        <div>
+          <div class="brand-name">CV Assistant</div>
+          <div class="brand-sub">Recruiter workspace</div>
+        </div>
+      </div>
+
+      <form class="new-chat-form" method="POST" action="{{ url_for('new_chat') }}">
+        <input type="text" name="title" placeholder="New chat title…" required>
+        <button type="submit" class="new-chat-submit" title="Start new chat" aria-label="Start new chat">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+        </button>
+      </form>
+
+      <div class="sidebar-label">Chats</div>
+      <div class="session-list">
+        {% if chat_sessions %}
+          {% for cs in chat_sessions %}
+            <div class="session-row {{ 'active' if cs.id == current_session_id }}" id="session-row-{{ cs.id }}">
+              <a class="session-link" href="{{ url_for('select_session', session_id=cs.id) }}">{{ cs.title }}</a>
+
+              <div class="session-actions">
+                <button type="button" class="icon-btn" title="Rename" aria-label="Rename chat" onclick="toggleRename({{ cs.id }})">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <a class="icon-btn danger" title="Delete" aria-label="Delete chat"
+                   href="{{ url_for('delete_session', session_id=cs.id) }}"
+                   onclick="return confirm('Delete “{{ cs.title }}” and all of its messages? This can’t be undone.');">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+              </div>
+
+              <form class="rename-form" method="POST" action="{{ url_for('rename_session', session_id=cs.id) }}">
+                <input type="text" name="title" value="{{ cs.title }}" required autocomplete="off">
+                <button type="submit" title="Save">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin:auto;"><path d="M20 6 9 17l-5-5" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+              </form>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-sessions">No chats yet — start one above.</div>
+        {% endif %}
+      </div>
+
+      <div class="sidebar-footer">
+        <a href="{{ url_for('dashboard') }}" class="upload-toggle" style="text-decoration:none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 13h4v8H3zM10 3h4v18h-4zM17 8h4v13h-4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          Recruiter Dashboard
+        </a>
+        <button type="button" class="upload-toggle" onclick="openUpload()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M12 4 7 9M12 4l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Upload CVs
+        </button>
+        <button type="button" class="notes-toggle" onclick="openNotes()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 2h6a2 2 0 0 1 2 2v16l-5-3-5 3V4a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          Recruiter notes
+          <span class="count">{{ recruiter_notes.notes|length if recruiter_notes else 0 }}</span>
+        </button>
+        <a href="{{ url_for('logout') }}" class="upload-toggle" style="text-decoration:none; text-align:center; justify-content:center;">
+  تسجيل الخروج {% if current_user_email %}({{ current_user_email }}){% endif %}
+</a>
+      </div>
+    </aside>
+
+    <!-- ================= MAIN ================= -->
+    <div class="main">
+
+      <div class="topbar">
+        <button class="menu-btn" onclick="toggleSidebar()" aria-label="Toggle chats">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <strong style="font-size:14px;">CV Assistant</strong>
+      </div>
+
+      <div class="main-scroll">
+        <div class="wrap">
+
+          <div class="top-row">
+  <div>
+    <h1>CV Assistant</h1>
+    <p class="subtitle">Ask about the candidates, or follow up on the last answer.</p>
+  </div>
+  <div style="display:flex; align-items:center; gap:10px;">
+    {% for cs in chat_sessions %}
+      {% if cs.id == current_session_id %}
+        <span class="session-title-pill">{{ cs.title }}</span>
+      {% endif %}
+    {% endfor %}
+    <button type="button" class="lang-toggle-btn" id="langToggleBtn" onclick="toggleChatLanguage()">🌐 العربية</button>
+  </div>
+</div>
+          
+
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              <div class="flash-list">
+                {% for category, msg in messages %}
+                  <div class="flash-msg {{ 'flash-error' if category == 'error' else 'flash-success' }}">{{ msg }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endwith %}
+
+          {% if history %}
+            <div class="chat">
+              {% for msg in history %}
+                <div class="bubble {{ 'user' if msg.role == 'user' else 'assistant' }}">
+                  <div class="bubble-role">{{ 'Recruiter' if msg.role == 'user' else 'Assistant' }}</div>
+                  <div>{{ msg.content }}</div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-chat">No messages in this chat yet. Ask something about the candidates below.</div>
+          {% endif %}
+
+          {% if suggestions %}
+            <div class="suggestions">
+              {% for s in suggestions %}
+                <button type="button" class="suggestion-chip" onclick="askSuggestion(this)">{{ s }}</button>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% if comparison_cards %}
+            <div class="section-title">Candidate comparison (latest question)</div>
+            <div class="compare-grid">
+              {% for card in comparison_cards %}
+                <div class="compare-card">
+                  <div class="compare-name">{{ card.name }}</div>
+                  <ul class="compare-points">
+                    {% for point in card.points %}
+                      <li>{{ point }}</li>
+                    {% endfor %}
+                  </ul>
+                  <div class="compare-source">Source: {{ card.source }}</div>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% if evidence %}
+            <div class="section-title">Evidence from the CVs (latest question)</div>
+            <div class="evidence-list">
+              {% for item in evidence %}
+                <div class="evidence-card">
+                  <div class="evidence-file">{{ item.source }}</div>
+                  <div class="evidence-snippet">"{{ item.snippet }}"</div>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% if proposed_action %}
+            <div class="proposed-action-card">
+              <div class="title">🤖 Proposed action -- not saved yet</div>
+              <div class="row"><span class="k">Candidate:</span>{{ proposed_action.candidate_name }}</div>
+              {% if proposed_action.type == 'schedule_interview' %}
+                <div class="row"><span class="k">Action:</span>Schedule Interview</div>
+                <div class="row"><span class="k">Date:</span>{{ proposed_action.interview_date }}</div>
+                <div class="row"><span class="k">Time:</span>{{ proposed_action.interview_time or '—' }}</div>
+                {% if proposed_action.notes %}<div class="row"><span class="k">Notes:</span>{{ proposed_action.notes }}</div>{% endif %}
+              {% elif proposed_action.type == 'status_change' %}
+                <div class="row"><span class="k">Action:</span>Change Status</div>
+                <div class="row"><span class="k">New status:</span>{{ proposed_action.new_status }}</div>
+              {% endif %}
+
+              <div class="proposed-action-actions">
+                <form method="POST" action="{{ url_for('approve_agent_action') }}">
+                  <input type="hidden" name="action_type" value="{{ proposed_action.type }}">
+                  <input type="hidden" name="candidate_id" value="{{ proposed_action.candidate_id }}">
+                  {% if proposed_action.type == 'schedule_interview' %}
+                    <input type="hidden" name="interview_date" value="{{ proposed_action.interview_date }}">
+                    <input type="hidden" name="interview_time" value="{{ proposed_action.interview_time }}">
+                    <input type="hidden" name="notes" value="{{ proposed_action.notes }}">
+                  {% elif proposed_action.type == 'status_change' %}
+                    <input type="hidden" name="new_status" value="{{ proposed_action.new_status }}">
+                  {% endif %}
+                  <button type="submit" class="btn-approve">✓ Approve</button>
+                </form>
+                <form method="POST" action="{{ url_for('cancel_agent_action') }}">
+                  <button type="submit" class="btn-cancel-action">✕ Cancel</button>
+                </form>
+              </div>
+            </div>
+          {% endif %}
+
+          {% if last_question and last_answer %}
+            <form method="POST" action="{{ url_for('export_report') }}" class="export-form">
+              <input type="hidden" name="question" value="{{ last_question }}">
+              <input type="hidden" name="answer" value="{{ last_answer }}">
+              <input type="hidden" name="evidence_json" value='{{ evidence | tojson }}'>
+              <input type="hidden" name="comparison_json" value='{{ comparison_cards | tojson }}'>
+              <button type="submit" class="export-btn">📄 Export as PDF</button>
+            </form>
+          {% endif %}
+
+          {% if steps %}
+            <details>
+              <summary>Execution trace (latest question)</summary>
+              {% for step in steps %}
+                <div class="step">
+                  <div class="step-row"><span class="k">Tool:</span>{{ step.tool }}</div>
+                  <div class="step-row"><span class="k">Arguments:</span>{{ step.arguments }}</div>
+                  <div class="step-row"><span class="k">Result:</span>{{ step.result }}</div>
+                  <div class="step-row"><span class="k">Sources:</span>{{ step.result.get('sources', []) }}</div>
+                  {% if step.result.get('best_score') is not none %}
+                    {% set score = step.result.get('best_score') %}
+                    {% if score >= 0.35 %}
+                      {% set conf_class, conf_emoji, conf_label = 'conf-high', '🟢', 'High confidence' %}
+                    {% elif score >= confidence_threshold %}
+                      {% set conf_class, conf_emoji, conf_label = 'conf-med', '🟡', 'Medium confidence' %}
+                    {% else %}
+                      {% set conf_class, conf_emoji, conf_label = 'conf-low', '🔴', 'Low confidence' %}
+                    {% endif %}
+                    <div class="step-row">
+                      <span class="k">Confidence:</span>
+                      <span class="conf-badge {{ conf_class }}">{{ conf_emoji }} {{ conf_label }} ({{ score }})</span>
+                    </div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </details>
+          {% endif %}
+
+          <div class="composer">
+            <div class="card">
+              <form class="ask-form" method="POST">
+                <textarea name="question" placeholder="e.g. Who has React experience?"></textarea>
+
+                <!-- زر تحويل الصوت إلى نص مكتوب -->
+                <button type="button" class="voice-btn" id="speechToTextBtn" title="Speech to Text" onclick="toggleSpeechToText()">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18.5V23M8 23h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+
+                <!-- زر المحادثة الصوتية التفاعلية المستمرة -->
+                <button type="button" class="voice-btn" id="voiceChatBtn" title="Voice Chat Mode" onclick="toggleVoiceChat()">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+
+                <button type="submit">Ask</button>
+              </form>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= NOTES DRAWER ================= -->
+  <div class="notes-backdrop" onclick="closeNotes(); closeUpload();"></div>
+  <aside class="notes-drawer">
+    <div class="notes-header">
+      <h2>Recruiter notes</h2>
+      <button class="notes-close" onclick="closeNotes()" aria-label="Close notes">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="notes-body">
+      <form class="note-add-card" method="POST" action="{{ url_for('add_note') }}">
+        <label for="candidate_name">Candidate</label>
+        <input type="text" id="candidate_name" name="candidate_name" placeholder="e.g. Sara Haddad" required>
+        <label for="note">Note</label>
+        <textarea id="note" name="note" placeholder="e.g. Strong backend profile. Ask about deeper RAG experience." required></textarea>
+        <button type="submit">Add note</button>
+      </form>
+
+      <div class="notes-list">
+        {% if recruiter_notes and recruiter_notes.notes %}
+          {% for n in recruiter_notes.notes %}
+            <div class="note-card" id="note-card-{{ n.id }}">
+              <div class="note-card-top">
+                <span class="note-candidate">{{ n.candidate_name }}</span>
+                <div class="note-actions">
+                  <button type="button" class="icon-btn" title="Edit" aria-label="Edit note" onclick="toggleNoteEdit({{ n.id }})">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                  <a class="icon-btn danger" title="Delete" aria-label="Delete note"
+                     href="{{ url_for('delete_note', note_id=n.id) }}"
+                     onclick="return confirm('Delete this note about {{ n.candidate_name }}?');">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </a>
+                </div>
+              </div>
+
+              <div class="note-text">{{ n.note }}</div>
+
+              <form class="note-edit-form" method="POST" action="{{ url_for('update_note', note_id=n.id) }}">
+                <textarea name="note" required>{{ n.note }}</textarea>
+                <div class="note-edit-actions">
+                  <button type="submit" class="note-save-btn">Save</button>
+                  <button type="button" class="note-cancel-btn" onclick="toggleNoteEdit({{ n.id }})">Cancel</button>
+                </div>
+              </form>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-notes">No recruiter notes yet. Add one above.</div>
+        {% endif %}
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================= UPLOAD DRAWER ================= -->
+  <aside class="upload-drawer">
+    <div class="notes-header">
+      <h2>Upload CVs</h2>
+      <button class="notes-close" onclick="closeUpload()" aria-label="Close upload">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="notes-body">
+      <form id="uploadForm" method="POST" action="{{ url_for('upload_cv') }}" enctype="multipart/form-data">
+        <label class="upload-dropzone" id="dropzone" for="cv_files_input">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M12 16V4M12 4 7 9M12 4l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="main-txt">اضغط لاختيار ملفات أو اسحبها هون</div>
+          <div class="sub-txt">PDF فقط، حتى 10MB للملف</div>
+          <input type="file" id="cv_files_input" name="cv_files" accept="application/pdf" multiple>
+        </label>
+
+        <div class="upload-file-list" id="uploadFileList"></div>
+
+        <button type="submit" class="upload-submit-btn" id="uploadSubmitBtn" disabled>رفع وفهرسة السيفيهات</button>
+      </form>
+
+      <div class="upload-note">
+        بعد الرفع، رح ينضاف السيفي مباشرة لقاعدة المعرفة (RAG) وتقدر تسأل عنه أو تقارنه مع باقي المرشحين فورًا — بدون ما تحتاج تعيد تشغيل السيرفر.
+      </div>
+    </div>
+  </aside>
+
+<script>
+
+    // =========================================================
+    // GENERAL UI FUNCTIONS
+    // =========================================================
+
+    function askSuggestion(btn) {
+        const form = document.querySelector('form.ask-form');
+        const textarea = document.querySelector('textarea[name="question"]');
+
+        if (textarea && form) {
+            textarea.value = btn.textContent.trim();
+            form.submit();
+        }
+    }
+
+
+    function toggleRename(id) {
+        const row = document.getElementById('session-row-' + id);
+
+        if (row) {
+            row.classList.toggle('editing');
+        }
+    }
+
+
+    function toggleNoteEdit(id) {
+        const card = document.getElementById('note-card-' + id);
+
+        if (card) {
+            card.classList.toggle('editing');
+        }
+    }
+
+
+    function openNotes() {
+        document.body.classList.remove('upload-open');
+        document.body.classList.add('notes-open');
+    }
+
+
+    function closeNotes() {
+        document.body.classList.remove('notes-open');
+    }
+
+
+    function toggleSidebar() {
+        document.body.classList.toggle('sidebar-open');
+    }
+
+
+    // =========================================================
+    // UPLOAD DRAWER
+    // =========================================================
+
+    function openUpload() {
+        document.body.classList.remove('notes-open');
+        document.body.classList.add('upload-open');
+    }
+
+
+    function closeUpload() {
+        document.body.classList.remove('upload-open');
+    }
+
+
+    (function setupUpload() {
+        const input = document.getElementById('cv_files_input');
+        const dropzone = document.getElementById('dropzone');
+        const fileListEl = document.getElementById('uploadFileList');
+        const submitBtn = document.getElementById('uploadSubmitBtn');
+
+        if (!input || !dropzone || !fileListEl || !submitBtn) {
+            return;
+        }
+
+        function renderFileList() {
+            fileListEl.innerHTML = '';
+            const files = input.files;
+
+            if (!files || files.length === 0) {
+                submitBtn.disabled = true;
+                return;
+            }
+
+            submitBtn.disabled = false;
+
+            for (let i = 0; i < files.length; i++) {
+                const item = document.createElement('div');
+                item.className = 'upload-file-item';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'name';
+                nameSpan.textContent = files[i].name;
+
+                item.appendChild(nameSpan);
+                fileListEl.appendChild(item);
+            }
+        }
+
+        input.addEventListener('change', renderFileList);
+
+        dropzone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            dropzone.classList.add('drag-over');
+        });
+
+        dropzone.addEventListener('dragleave', function () {
+            dropzone.classList.remove('drag-over');
+        });
+
+        dropzone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            dropzone.classList.remove('drag-over');
+
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                input.files = e.dataTransfer.files;
+                renderFileList();
+            }
+        });
+    })();
+
+
+    // =========================================================
+    // SPEECH RECOGNITION
+    // =========================================================
+
+    const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+    let recognitionInstance = null;
+
+
+    // =========================================================
+    // VOICE CHAT STATE
+    // =========================================================
+
+    let isVoiceChatActive = false;
+    let isVoiceListening = false;
+    let isSpeaking = false;
+    let voiceRequestInProgress = false;
+
+    let voiceTranscript = "";
+    let silenceTimer = null;
+    let restartTimer = null;
+
+    // Used to invalidate old recognition callbacks
+    let recognitionGeneration = 0;
+
+
+    // =========================================================
+    // 1. SPEECH TO TEXT ONLY
+    // =========================================================
+
+    function toggleSpeechToText() {
+
+        if (!SpeechRecognition) {
+            alert("متصفحك لا يدعم خاصية التعرف على الصوت.");
+            return;
+        }
+
+        const btn = document.getElementById('speechToTextBtn');
+
+        const textarea = document.querySelector(
+            'textarea[name="question"]'
+        );
+
+        // If currently recording -> stop
+        if (btn.classList.contains('recording')) {
+
+            if (recognitionInstance) {
+
+                try {
+                    recognitionInstance.stop();
+                } catch (e) {
+                    console.log(e);
+                }
+            }
+
+            btn.classList.remove('recording');
+
+            return;
+        }
+
+
+        const recognition = new SpeechRecognition();
+
+        recognitionInstance = recognition;
+
+
+        // Your CV questions are mainly in English
+        recognition.lang = 'en-US';
+
+        recognition.interimResults = false;
+        recognition.continuous = false;
+        recognition.maxAlternatives = 1;
+
+
+        btn.classList.add('recording');
+
+
+        recognition.onstart = function () {
+
+            btn.classList.add('recording');
+
+        };
+
+
+        recognition.onresult = function (event) {
+
+            const text =
+                event.results[0][0].transcript;
+
+            if (textarea) {
+
+                textarea.value = text;
+                textarea.focus();
+
+            }
+
+            btn.classList.remove('recording');
+
+        };
+
+
+        recognition.onerror = function (event) {
+
+            console.log(
+                "Speech-to-text error:",
+                event.error
+            );
+
+            btn.classList.remove('recording');
+
+        };
+
+
+        recognition.onend = function () {
+
+            btn.classList.remove('recording');
+
+            if (recognitionInstance === recognition) {
+                recognitionInstance = null;
+            }
+
+        };
+
+
+        try {
+
+            recognition.start();
+
+        } catch (error) {
+
+            console.log(
+                "Could not start speech recognition:",
+                error
+            );
+
+            btn.classList.remove('recording');
+
+        }
+
+    }
+
+
+    // =========================================================
+    // 2. VOICE CHAT
+    // =========================================================
+
+
+    function toggleVoiceChat() {
+
+        if (!SpeechRecognition) {
+
+            alert(
+                "متصفحك لا يدعم المحادثة الصوتية."
+            );
+
+            return;
+        }
+
+
+        const btn =
+            document.getElementById("voiceChatBtn");
+
+
+        // =====================================================
+        // STOP VOICE CHAT
+        // =====================================================
+
+        if (isVoiceChatActive) {
+
+            isVoiceChatActive = false;
+
+            clearTimeout(silenceTimer);
+            clearTimeout(restartTimer);
+
+            stopRecognition();
+
+
+            // Stop AI speech
+            if ("speechSynthesis" in window) {
+
+                window.speechSynthesis.cancel();
+
+            }
+
+
+            isSpeaking = false;
+            voiceRequestInProgress = false;
+            voiceTranscript = "";
+
+
+            btn.classList.remove(
+                "active-chat",
+                "recording"
+            );
+
+
+            return;
+        }
+
+
+        // =====================================================
+        // START VOICE CHAT
+        // =====================================================
+
+        isVoiceChatActive = true;
+
+        isSpeaking = false;
+        voiceRequestInProgress = false;
+
+        voiceTranscript = "";
+
+        btn.classList.add("active-chat");
+
+
+        startVoiceListening();
+
+    }
+
+
+    // =========================================================
+    // START LISTENING
+    // =========================================================
+
+    function startVoiceListening() {
+
+        if (!isVoiceChatActive) {
+            return;
+        }
+
+        if (isSpeaking) {
+            return;
+        }
+
+        if (voiceRequestInProgress) {
+            return;
+        }
+
+
+        clearTimeout(silenceTimer);
+        clearTimeout(restartTimer);
+
+
+        // Stop any old recognition instance
+        stopRecognition();
+
+
+        const btn =
+            document.getElementById("voiceChatBtn");
+
+
+        const textarea =
+            document.querySelector(
+                'textarea[name="question"]'
+            );
+
+
+        if (!textarea) {
+            return;
+        }
+
+
+        const recognition =
+            new SpeechRecognition();
+
+
+        recognitionInstance = recognition;
+
+
+        const currentGeneration =
+            ++recognitionGeneration;
+
+
+        // =====================================================
+        // RECOGNITION SETTINGS
+        // =====================================================
+
+        recognition.lang = "en-US";
+
+        // Keep listening continuously
+        recognition.continuous = true;
+
+        // Needed to see what the user is currently saying
+        recognition.interimResults = true;
+
+        recognition.maxAlternatives = 1;
+
+
+        // =====================================================
+        // IMPORTANT
+        // =====================================================
+        //
+        // DO NOT reset voiceTranscript here.
+        //
+        // The browser can automatically stop recognition.
+        // When we restart it, we MUST keep the previous text.
+        //
+
+        isVoiceListening = true;
+
+        btn.classList.add("recording");
+
+
+        // =====================================================
+        // ON START
+        // =====================================================
+
+        recognition.onstart = function () {
+
+            if (!isVoiceChatActive) {
+                return;
+            }
+
+            isVoiceListening = true;
+
+            btn.classList.add("recording");
+
+            console.log(
+                "Voice Chat: microphone started"
+            );
+
+        };
+
+
+        // =====================================================
+        // ON RESULT
+        // =====================================================
+
+        recognition.onresult = function (event) {
+
+            // Ignore old recognition instance
+            if (
+                currentGeneration !==
+                recognitionGeneration
+            ) {
+                return;
+            }
+
+
+            if (!isVoiceChatActive) {
+                return;
+            }
+
+
+            let interimText = "";
+
+
+            for (
+                let i = event.resultIndex;
+                i < event.results.length;
+                i++
+            ) {
+
+                const text =
+                    event.results[i][0]
+                        .transcript
+                        .trim();
+
+
+                if (
+                    event.results[i].isFinal
+                ) {
+
+                    if (text) {
+
+                        voiceTranscript +=
+                            (
+                                voiceTranscript
+                                    ? " "
+                                    : ""
+                            ) + text;
+
+                    }
+
+                } else {
+
+                    interimText += text;
+
+                }
+
+            }
+
+
+            // =================================================
+            // SHOW CURRENT SPEECH IN TEXTAREA
+            // =================================================
+
+            const currentText =
+                (
+                    voiceTranscript +
+                    (
+                        interimText
+                            ? " " + interimText
+                            : ""
+                    )
+                ).trim();
+
+
+            textarea.value = currentText;
+
+
+            // Keep cursor at the end
+            try {
+                textarea.focus();
+                textarea.setSelectionRange(
+                    textarea.value.length,
+                    textarea.value.length
+                );
+            } catch (e) {
+                // Ignore
+            }
+
+
+            // =================================================
+            // RESET SILENCE TIMER
+            // =================================================
+            //
+            // User has spoken.
+            //
+            // We wait 3 seconds after the LAST speech
+            // before deciding that the user finished.
+            //
+
+            clearTimeout(silenceTimer);
+
+
+            silenceTimer =
+                setTimeout(
+                    function () {
+
+                        finishVoiceTurn();
+
+                    },
+                    3000
+                );
+
+        };
+
+
+        // =====================================================
+        // ON ERROR
+        // =====================================================
+
+        recognition.onerror = function (event) {
+
+            console.log(
+                "Voice recognition error:",
+                event.error
+            );
+
+
+            if (!isVoiceChatActive) {
+                return;
+            }
+
+
+            // Browser can produce this when user pauses.
+            // We don't want to end Voice Chat.
+            if (
+                event.error === "no-speech"
+            ) {
+
+                return;
+            }
+
+
+            if (
+                event.error === "aborted"
+            ) {
+
+                return;
+            }
+
+
+            if (
+                event.error === "not-allowed"
+            ) {
+
+                alert(
+                    "الميكروفون غير مسموح. فعّل صلاحية الميكروفون للمتصفح."
+                );
+
+
+                isVoiceChatActive = false;
+
+
+                clearTimeout(silenceTimer);
+                clearTimeout(restartTimer);
+
+
+                btn.classList.remove(
+                    "active-chat",
+                    "recording"
+                );
+
+
+                return;
+            }
+
+        };
+
+
+        // =====================================================
+        // ON END
+        // =====================================================
+
+        recognition.onend = function () {
+
+            if (
+                currentGeneration !==
+                recognitionGeneration
+            ) {
+                return;
+            }
+
+
+            isVoiceListening = false;
+
+            btn.classList.remove("recording");
+
+
+            if (
+                recognitionInstance ===
+                recognition
+            ) {
+
+                recognitionInstance = null;
+
+            }
+
+
+            // =================================================
+            // IMPORTANT
+            // =================================================
+            //
+            // Chrome may stop SpeechRecognition by itself.
+            //
+            // If the user is still in the middle of a question,
+            // restart recognition WITHOUT deleting
+            // voiceTranscript.
+            //
+            // We do NOT call finishVoiceTurn here.
+            //
+
+            if (
+                isVoiceChatActive &&
+                !isSpeaking &&
+                !voiceRequestInProgress
+            ) {
+
+                restartTimer =
+                    setTimeout(
+                        function () {
+
+                            if (
+                                isVoiceChatActive &&
+                                !isSpeaking &&
+                                !voiceRequestInProgress
+                            ) {
+
+                                startVoiceListening();
+
+                            }
+
+                        },
+                        300
+                    );
+
+            }
+
+        };
+
+
+        // =====================================================
+        // START RECOGNITION
+        // =====================================================
+
+        try {
+
+            recognition.start();
+
+        } catch (error) {
+
+            console.log(
+                "Could not start recognition:",
+                error
+            );
+
+
+            isVoiceListening = false;
+
+            btn.classList.remove(
+                "recording"
+            );
+
+
+            restartTimer =
+                setTimeout(
+                    function () {
+
+                        if (
+                            isVoiceChatActive &&
+                            !isSpeaking &&
+                            !voiceRequestInProgress
+                        ) {
+
+                            startVoiceListening();
+
+                        }
+
+                    },
+                    500
+                );
+
+        }
+
+    }
+
+
+    // =========================================================
+    // FINISH USER TURN
+    // =========================================================
+
+    function finishVoiceTurn() {
+
+        if (!isVoiceChatActive) {
+            return;
+        }
+
+
+        if (voiceRequestInProgress) {
+            return;
+        }
+
+
+        const text =
+            voiceTranscript.trim();
+
+
+        if (!text) {
+            return;
+        }
+
+
+        clearTimeout(silenceTimer);
+        clearTimeout(restartTimer);
+
+
+        // Save the question BEFORE clearing transcript
+        const questionToSend = text;
+
+
+        // Clear transcript for the NEXT question
+        voiceTranscript = "";
+
+
+        // Stop microphone
+        stopRecognition();
+
+
+        // Send question to Flask
+        sendVoiceQuestion(
+            questionToSend
+        );
+
+    }
+
+
+    // =========================================================
+    // STOP RECOGNITION
+    // =========================================================
+
+    function stopRecognition() {
+
+        recognitionGeneration++;
+
+
+        clearTimeout(restartTimer);
+
+
+        if (recognitionInstance) {
+
+            const oldRecognition =
+                recognitionInstance;
+
+
+            recognitionInstance = null;
+
+
+            try {
+
+                oldRecognition.onresult = null;
+                oldRecognition.onerror = null;
+                oldRecognition.onend = null;
+
+                oldRecognition.stop();
+
+            } catch (e) {
+
+                console.log(e);
+
+            }
+
+        }
+
+
+        isVoiceListening = false;
+
+
+        const btn =
+            document.getElementById(
+                "voiceChatBtn"
+            );
+
+
+        if (btn) {
+
+            btn.classList.remove(
+                "recording"
+            );
+
+        }
+
+    }
+
+
+    // =========================================================
+    // SEND VOICE QUESTION
+    // =========================================================
+
+    async function sendVoiceQuestion(text) {
+
+        if (!isVoiceChatActive) {
+            return;
+        }
+
+
+        if (voiceRequestInProgress) {
+            return;
+        }
+
+
+        voiceRequestInProgress = true;
+
+
+        const btn =
+            document.getElementById(
+                "voiceChatBtn"
+            );
+
+
+        if (btn) {
+
+            btn.classList.remove(
+                "recording"
+            );
+
+        }
+
+
+        try {
+
+            console.log(
+                "Sending voice question:",
+                text
+            );
+
+
+            // =================================================
+            // SEND TO FLASK
+            // =================================================
+
+            const formData =
+                new FormData();
+
+
+            formData.set(
+                "question",
+                text
+            );
+
+
+            const response =
+                await fetch(
+                    "/voice_chat",
+                    {
+                        method: "POST",
+                        body: formData,
+                        credentials: "same-origin"
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Server error: " +
+                    response.status
+                );
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            if (!data.success) {
+
+                throw new Error(
+                    data.answer ||
+                    "Voice request failed."
+                );
+
+            }
+
+
+            const answer =
+                data.answer || "";
+
+
+            console.log(
+                "Assistant answer:",
+                answer
+            );
+
+
+            // =================================================
+            // ADD QUESTION + ANSWER TO CHAT
+            // =================================================
+
+            addVoiceMessagesToChat(
+                text,
+                answer
+            );
+
+
+            // =================================================
+            // READ ANSWER
+            // =================================================
+
+            if (answer && isVoiceChatActive) {
+
+    // The request is finished.
+    // Allow the microphone to restart after TTS.
+    voiceRequestInProgress = false;
+
+    await speakText(answer);
+
+} else {
+
+    voiceRequestInProgress = false;
+    isSpeaking = false;
+
+    if (isVoiceChatActive) {
+        startVoiceListening();
+    }
+
+}
+
+
+        } catch (error) {
+
+            console.error(
+                "Voice Chat error:",
+                error
+            );
+
+
+            if (
+                isVoiceChatActive
+            ) {
+
+                setTimeout(
+                    function () {
+
+                        if (
+                            isVoiceChatActive &&
+                            !isSpeaking &&
+                            !voiceRequestInProgress
+                        ) {
+
+                            startVoiceListening();
+
+                        }
+
+                    },
+                    1000
+                );
+
+            }
+
+
+
+        }
+
+    }
+
+
+    // =========================================================
+    // ADD VOICE MESSAGES TO CHAT
+    // =========================================================
+
+    function addVoiceMessagesToChat(
+        question,
+        answer
+    ) {
+
+        let chat =
+            document.querySelector(
+                ".chat"
+            );
+
+
+        // =====================================================
+        // If chat container doesn't exist,
+        // create one.
+        // =====================================================
+
+        if (!chat) {
+
+            const emptyChat =
+                document.querySelector(
+                    ".empty-chat"
+                );
+
+
+            if (emptyChat) {
+
+                chat =
+                    document.createElement(
+                        "div"
+                    );
+
+                chat.className = "chat";
+
+
+                emptyChat.replaceWith(
+                    chat
+                );
+
+            } else {
+
+                return;
+
+            }
+
+        }
+
+
+        // =====================================================
+        // USER MESSAGE
+        // =====================================================
+
+        const userBubble =
+            document.createElement(
+                "div"
+            );
+
+
+        userBubble.className =
+            "bubble user";
+
+
+        userBubble.innerHTML =
+            `
+            <div class="bubble-role">
+                RECRUITER
+            </div>
+
+            <div>
+                ${escapeHtml(question)}
+            </div>
+            `;
+
+
+        // =====================================================
+        // ASSISTANT MESSAGE
+        // =====================================================
+
+        const assistantBubble =
+            document.createElement(
+                "div"
+            );
+
+
+        assistantBubble.className =
+            "bubble assistant";
+
+
+        assistantBubble.innerHTML =
+            `
+            <div class="bubble-role">
+                ASSISTANT
+            </div>
+
+            <div>
+                ${escapeHtml(answer)}
+            </div>
+            `;
+
+
+        // Add messages
+        chat.appendChild(
+            userBubble
+        );
+
+
+        chat.appendChild(
+            assistantBubble
+        );
+
+
+        // =====================================================
+        // SCROLL DOWN
+        // =====================================================
+
+        const mainScroll =
+            document.querySelector(
+                ".main-scroll"
+            );
+
+
+        if (mainScroll) {
+
+            setTimeout(
+                function () {
+
+                    mainScroll.scrollTo({
+
+                        top:
+                            mainScroll.scrollHeight,
+
+                        behavior:
+                            "smooth"
+
+                    });
+
+                },
+                100
+            );
+
+        }
+
+    }
+
+
+    // =========================================================
+    // ESCAPE HTML
+    // =========================================================
+
+    function escapeHtml(text) {
+
+        const div =
+            document.createElement(
+                "div"
+            );
+
+
+        div.textContent =
+            text;
+
+
+        return div.innerHTML;
+
+    }
+
+
+    // =========================================================
+    // TEXT TO SPEECH
+    // =========================================================
+
+    async function speakText(text) {
+
+        if (!text) {
+            return;
+        }
+
+
+        if (
+            !("speechSynthesis" in window)
+        ) {
+
+            console.log(
+                "Speech synthesis is not supported."
+            );
+
+            return;
+
+        }
+
+
+        isSpeaking = true;
+
+
+        // Make sure microphone is OFF
+        stopRecognition();
+
+
+        // Cancel any previous speech
+        window.speechSynthesis.cancel();
+
+
+        await sleep(100);
+
+
+        const chunks =
+            splitTextIntoSpeechChunks(
+                text,
+                220
+            );
+
+
+        for (
+            let i = 0;
+            i < chunks.length;
+            i++
+        ) {
+
+            if (
+                !isVoiceChatActive
+            ) {
+
+                break;
+
+            }
+
+
+            await speakChunk(
+                chunks[i]
+            );
+
+        }
+
+
+        isSpeaking = false;
+
+
+        // =====================================================
+        // AFTER AI FINISHES SPEAKING
+        // OPEN MICROPHONE AGAIN
+        // =====================================================
+
+        if (
+            isVoiceChatActive
+        ) {
+
+            setTimeout(
+                function () {
+
+                    if (
+                        isVoiceChatActive &&
+                        !isSpeaking &&
+                        !voiceRequestInProgress
+                    ) {
+
+                        startVoiceListening();
+
+                    }
+
+                },
+                500
+            );
+
+        }
+
+    }
+
+
+    // =========================================================
+    // SPEAK ONE CHUNK
+    // =========================================================
+
+    function speakChunk(text) {
+
+        return new Promise(
+            function (resolve) {
+
+                const utterance =
+                    new SpeechSynthesisUtterance(
+                        text
+                    );
+
+
+                const voices =
+                    window.speechSynthesis
+                        .getVoices();
+
+
+                // Prefer English voice
+                let voice =
+                    voices.find(
+                        function (v) {
+
+                            return (
+                                v.lang ===
+                                "en-US"
+                            );
+
+                        }
+                    );
+
+
+                // Otherwise any English voice
+                if (!voice) {
+
+                    voice =
+                        voices.find(
+                            function (v) {
+
+                                return v.lang
+                                    .startsWith(
+                                        "en"
+                                    );
+
+                            }
+                        );
+
+                }
+
+
+                if (voice) {
+
+                    utterance.voice =
+                        voice;
+
+                    utterance.lang =
+                        voice.lang;
+
+                } else {
+
+                    utterance.lang =
+                        "en-US";
+
+                }
+
+
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+
+
+                utterance.onend =
+                    function () {
+
+                        resolve();
+
+                    };
+
+
+                utterance.onerror =
+                    function (event) {
+
+                        console.log(
+                            "TTS error:",
+                            event
+                        );
+
+
+                        resolve();
+
+                    };
+
+
+                window.speechSynthesis.speak(
+                    utterance
+                );
+
+            }
+        );
+
+    }
+
+
+    // =========================================================
+    // SPLIT LONG TEXT
+    // =========================================================
+
+    function splitTextIntoSpeechChunks(
+        text,
+        maxLength
+    ) {
+
+        if (!text) {
+            return [];
+        }
+
+
+        const sentences =
+            text.match(
+                /[^.!?]+[.!?]+|[^.!?]+$/g
+            );
+
+
+        if (!sentences) {
+
+            return [text];
+
+        }
+
+
+        const chunks = [];
+
+        let current = "";
+
+
+        for (
+            let i = 0;
+            i < sentences.length;
+            i++
+        ) {
+
+            const sentence =
+                sentences[i].trim();
+
+
+            if (!sentence) {
+                continue;
+            }
+
+
+            if (
+                (
+                    current +
+                    " " +
+                    sentence
+                )
+                    .trim()
+                    .length <= maxLength
+            ) {
+
+                current =
+                    (
+                        current +
+                        " " +
+                        sentence
+                    ).trim();
+
+            } else {
+
+                if (current) {
+
+                    chunks.push(
+                        current
+                    );
+
+                }
+
+                current =
+                    sentence;
+
+            }
+
+        }
+
+
+        if (current) {
+
+            chunks.push(
+                current
+            );
+
+        }
+
+
+        return chunks;
+
+    }
+
+
+    // =========================================================
+    // SMALL DELAY
+    // =========================================================
+
+    function sleep(ms) {
+
+        return new Promise(
+            function (resolve) {
+
+                setTimeout(
+                    resolve,
+                    ms
+                );
+
+            }
+        );
+
+    }
+
+</script>
+
+<script>
+  let chatLang = 'en';
+
+  async function toggleChatLanguage() {
+    const btn = document.getElementById('langToggleBtn');
+    const bubbleTexts = document.querySelectorAll('.chat .bubble > div:not(.bubble-role)');
+
+    if (chatLang === 'en') {
+      if (!bubbleTexts.length) {
+        chatLang = 'ar';
+        btn.textContent = '🌐 English';
+        return;
+      }
+
+      btn.disabled = true;
+      const oldLabel = btn.textContent;
+      btn.textContent = '... جاري الترجمة';
+
+      const originals = [];
+      bubbleTexts.forEach(el => {
+        if (!el.dataset.original) {
+          el.dataset.original = el.textContent;
+        }
+        originals.push(el.dataset.original);
+      });
+
+      try {
+        const response = await fetch('/translate_chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ texts: originals, target_lang: 'ar' })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          bubbleTexts.forEach((el, i) => {
+            el.textContent = data.translations[i] || el.dataset.original;
+            el.classList.add('rtl-text');
+          });
+          chatLang = 'ar';
+          btn.textContent = '🌐 English';
+        } else {
+          alert('تعذّرت الترجمة، حاول مرة ثانية.');
+          btn.textContent = oldLabel;
+        }
+      } catch (e) {
+        console.log('Translate error:', e);
+        alert('تعذّرت الترجمة، تأكد من الاتصال.');
+        btn.textContent = oldLabel;
+      } finally {
+        btn.disabled = false;
+      }
+
+    } else {
+      // رجوع للإنجليزي -- فوري، بدون أي طلب جديد للسيرفر
+      bubbleTexts.forEach(el => {
+        if (el.dataset.original) {
+          el.textContent = el.dataset.original;
+        }
+        el.classList.remove('rtl-text');
+      });
+      chatLang = 'en';
+      btn.textContent = '🌐 العربية';
+    }
+  }
+</script>
+
+</body>
+</html>

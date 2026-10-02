@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add Candidate</title>
+{% include "_dashboard_style.html" %}
+</head>
+<body>
+  <div class="wrap" style="max-width: 560px;">
+
+    <div class="top-row">
+      <div>
+        <h1>Add Candidate</h1>
+        <p class="subtitle">Upload a CV PDF -- we'll pull out the factual details for you to review.</p>
+      </div>
+      <div class="nav-links">
+        <a class="nav-link" href="{{ url_for('dashboard') }}">← Dashboard</a>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-list">
+          {% for category, msg in messages %}
+            <div class="flash-msg {{ 'flash-error' if category == 'error' else 'flash-success' }}">{{ msg }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="card">
+      <form method="POST" action="{{ url_for('extract_candidate') }}" enctype="multipart/form-data">
+        <label class="field-label" for="cv_file">CV file (PDF)</label>
+        <input type="file" id="cv_file" name="cv_file" accept="application/pdf" required>
+        <p class="field-hint">After upload, the assistant reads the CV and extracts the candidate's name and email for you to confirm on the next screen -- nothing is saved yet.</p>
+        <button type="submit" class="btn-primary">Extract with AI →</button>
+      </form>
+    </div>
+
+  </div>
+</body>
+</html>

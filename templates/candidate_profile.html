@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ candidate.name }} — Candidate Profile</title>
+{% include "_dashboard_style.html" %}
+</head>
+<body>
+  <div class="wrap" style="max-width: 700px;">
+
+    <div class="top-row">
+      <div>
+        <h1>{{ candidate.name }}</h1>
+        <p class="subtitle">Candidate profile</p>
+      </div>
+      <div class="nav-links">
+        <a class="nav-link" href="{{ url_for('dashboard') }}">← Dashboard</a>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-list">
+          {% for category, msg in messages %}
+            <div class="flash-msg {{ 'flash-error' if category == 'error' else 'flash-success' }}">{{ msg }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- ===== Candidate details ===== -->
+    <div class="card">
+      <div class="profile-meta">
+        <div>
+          <div class="k">Email</div>
+          <div class="v">{{ candidate.email or '—' }}</div>
+        </div>
+        <div>
+          <div class="k">CV file</div>
+          <div class="v">{{ candidate.cv_file or '—' }}</div>
+        </div>
+        <div>
+          <div class="k">Added</div>
+          <div class="v">{{ candidate.created_at or '—' }}</div>
+        </div>
+        <div>
+          <div class="k">Current status</div>
+          <div class="v"><span class="status-badge status-{{ candidate.status }}">{{ candidate.status }}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Status update ===== -->
+    <div class="card">
+      <label class="field-label">Update application status</label>
+      <p class="field-hint">This is always set by the recruiter -- never by the AI.</p>
+      <form method="POST" action="{{ url_for('candidate_update_status', candidate_id=candidate.id) }}" class="inline-form">
+        <select name="status" style="max-width:220px;">
+          {% for s in statuses %}
+            <option value="{{ s }}" {{ 'selected' if s == candidate.status }}>{{ s }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn-primary">Update</button>
+      </form>
+    </div>
+
+    <!-- ===== Part 2: RAG chat scoped to this candidate ===== -->
+    <div class="card">
+      <label class="field-label">Ask about {{ candidate.name }}'s CV</label>
+      <p class="field-hint">Answers are restricted to this candidate's own CV, with sources shown below.</p>
+      <form method="POST" action="{{ url_for('candidate_profile', candidate_id=candidate.id) }}" class="inline-form">
+        <input type="text" name="candidate_question" placeholder="e.g. Does {{ candidate.name.split(' ')[0] }} have FastAPI experience?" required style="margin-bottom:0;">
+        <button type="submit" class="btn-primary">Ask</button>
+      </form>
+
+      {% if candidate_answer %}
+        <div class="chat-answer">
+          <div class="q">{{ candidate_question }}</div>
+          <div>{{ candidate_answer }}</div>
+        </div>
+        {% for item in candidate_evidence %}
+          <div class="evidence-mini">
+            <div class="src">Source: {{ item.source }}</div>
+            "{{ item.snippet }}"
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+
+    <!-- ===== Part 2: Recruiter assessment ===== -->
+    <div class="card">
+      <label class="field-label">Recruiter assessment</label>
+      <p class="field-hint">The AI may surface CV evidence above, but the recruiter always enters the score.</p>
+
+      <form method="POST" action="{{ url_for('add_candidate_assessment', candidate_id=candidate.id) }}" class="inline-form" style="margin-bottom:18px;">
+        <div>
+          <select name="criterion" required>
+            {% for c in assessment_criteria %}
+              <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="flex: 0 0 90px; min-width:90px;">
+          <input type="number" name="score" min="1" max="10" placeholder="1-10" required>
+        </div>
+        <div style="flex: 2;">
+          <input type="text" name="comment" placeholder="Optional comment">
+        </div>
+        <button type="submit" class="btn-primary">Add score</button>
+      </form>
+
+      {% if assessments %}
+        <table class="data-table">
+          <thead>
+            <tr><th>Criterion</th><th>Score</th><th>Comment</th></tr>
+          </thead>
+          <tbody>
+            {% for a in assessments %}
+              <tr>
+                <td>{{ a.criterion }}</td>
+                <td><span class="score-pill">{{ a.score }}/10</span></td>
+                <td>{{ a.comment or '—' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="field-hint" style="margin-bottom:0;">No assessment scores yet.</p>
+      {% endif %}
+    </div>
+
+    <!-- ===== Part 3: Interviews ===== -->
+    <div class="card">
+      <label class="field-label">Interviews</label>
+
+      <form method="POST" action="{{ url_for('schedule_interview', candidate_id=candidate.id) }}" class="inline-form" style="margin-bottom:18px;">
+        <div>
+          <input type="date" name="interview_date" required>
+        </div>
+        <div>
+          <input type="text" name="interview_time" placeholder="e.g. 11:00 AM">
+        </div>
+        <div style="flex: 2;">
+          <input type="text" name="notes" placeholder="Optional notes">
+        </div>
+        <button type="submit" class="btn-primary">Schedule</button>
+      </form>
+
+      {% if interviews %}
+        {% for iv in interviews %}
+          <div class="interview-card">
+            <div class="interview-top">
+              <div class="interview-when">{{ iv.interview_date }}{{ ' · ' + iv.interview_time if iv.interview_time }}</div>
+              <span class="status-badge status-{{ iv.status }}">{{ iv.status }}</span>
+            </div>
+            {% if iv.notes %}<div class="field-hint" style="margin:0 0 8px;">{{ iv.notes }}</div>{% endif %}
+
+            {% if iv.status == 'Scheduled' %}
+              <details>
+                <summary style="font-size:12.5px; color:#818cf8; cursor:pointer;">Update</summary>
+                <form method="POST" action="{{ url_for('update_interview_route', interview_id=iv.id) }}" class="inline-form" style="margin-top:10px;">
+                  <div><input type="date" name="interview_date" value="{{ iv.interview_date }}" required></div>
+                  <div><input type="text" name="interview_time" value="{{ iv.interview_time or '' }}" placeholder="e.g. 11:00 AM"></div>
+                  <div style="flex:2;"><input type="text" name="notes" value="{{ iv.notes or '' }}" placeholder="Notes"></div>
+                  <button type="submit" class="btn-primary">Save</button>
+                </form>
+              </details>
+              <div class="link-row">
+                <a class="link-btn danger" href="{{ url_for('cancel_interview_route', interview_id=iv.id) }}"
+                   onclick="return confirm('Cancel this interview?');">Cancel interview</a>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="field-hint" style="margin-bottom:0;">No interviews scheduled yet.</p>
+      {% endif %}
+    </div>
+
+    <!-- ===== Recruiter notes: add / view / edit / delete ===== -->
+    <div class="card">
+      <label class="field-label">Recruiter notes</label>
+
+      <form method="POST" action="{{ url_for('add_note') }}" class="inline-form" style="margin-bottom:16px;">
+        <input type="hidden" name="candidate_name" value="{{ candidate.name }}">
+        <input type="hidden" name="next" value="{{ url_for('candidate_profile', candidate_id=candidate.id) }}">
+        <input type="text" name="note" placeholder="Add a note about {{ candidate.name }}..." required style="margin-bottom:0;">
+        <button type="submit" class="btn-primary">Add</button>
+      </form>
+
+      {% if notes %}
+        {% for n in notes %}
+          <div class="note-mini">
+            <div>{{ n.note }}</div>
+            <details style="margin-top:8px;">
+              <summary style="font-size:12px; color:#818cf8; cursor:pointer;">Edit</summary>
+              <form method="POST" action="{{ url_for('update_note', note_id=n.id) }}" class="inline-form" style="margin-top:8px;">
+                <input type="hidden" name="next" value="{{ url_for('candidate_profile', candidate_id=candidate.id) }}">
+                <input type="text" name="note" value="{{ n.note }}" required style="margin-bottom:0;">
+                <button type="submit" class="btn-primary">Save</button>
+              </form>
+            </details>
+            <div class="link-row">
+              <a class="link-btn danger"
+                 href="{{ url_for('delete_note', note_id=n.id, next=url_for('candidate_profile', candidate_id=candidate.id)) }}"
+                 onclick="return confirm('Delete this note?');">Delete</a>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="field-hint" style="margin-bottom:0;">No notes yet for this candidate.</p>
+      {% endif %}
+    </div>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recruiter Dashboard</title>
+{% include "_dashboard_style.html" %}
+</head>
+<body>
+  <div class="wrap">
+
+    <div class="top-row">
+      <div>
+        <h1>Recruiter Dashboard</h1>
+        <p class="subtitle">All candidates and their current application status.</p>
+      </div>
+      <div class="nav-links">
+        <a class="nav-link" href="{{ url_for('add_candidate_form') }}">➕ Add Candidate</a>
+        <a class="nav-link" href="{{ url_for('index') }}">💬 CV Chat Assistant</a>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-list">
+          {% for category, msg in messages %}
+            <div class="flash-msg {{ 'flash-error' if category == 'error' else 'flash-success' }}">{{ msg }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="label">Total Candidates</div>
+        <div class="value">{{ summary.total }}</div>
+      </div>
+      <div class="summary-card accent">
+        <div class="label">Applied</div>
+        <div class="value">{{ summary.Applied }}</div>
+      </div>
+      <div class="summary-card accent">
+        <div class="label">Screening</div>
+        <div class="value">{{ summary.Screening }}</div>
+      </div>
+      <div class="summary-card accent">
+        <div class="label">Interview</div>
+        <div class="value">{{ summary.Interview }}</div>
+      </div>
+    </div>
+
+    {% if reminders %}
+      <div class="card" style="border-color: rgba(245, 158, 11, 0.25);">
+        <label class="field-label" style="color:#fbbf24;">🔔 Reminders / Upcoming Activity</label>
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+          {% for r in reminders %}
+            <div class="note-mini" style="border-color: rgba(245, 158, 11, 0.2);">{{ r.text }}</div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <form class="filter-row" method="GET" action="{{ url_for('dashboard') }}">
+      <label for="status">Filter by status</label>
+      <select name="status" id="status" onchange="this.form.submit()">
+        <option value="All" {{ 'selected' if status_filter == 'All' }}>All</option>
+        {% for s in statuses %}
+          <option value="{{ s }}" {{ 'selected' if status_filter == s }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </form>
+
+    <div class="card">
+      {% if candidates %}
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Candidate</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in candidates %}
+              <tr>
+                <td>{{ c.name }}</td>
+                <td><span class="status-badge status-{{ c.status }}">{{ c.status }}</span></td>
+                <td><a class="view-link" href="{{ url_for('candidate_profile', candidate_id=c.id) }}">View</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="empty-state">
+          No candidates yet. Use "Add Candidate" above to upload a CV and register one.
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</body>
+</html>

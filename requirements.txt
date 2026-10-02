@@ -1,0 +1,8 @@
+# pip install -r requirements.txt
+flask
+pypdf
+sentence-transformers
+scikit-learn
+groq
+python-dotenv
+reportlab

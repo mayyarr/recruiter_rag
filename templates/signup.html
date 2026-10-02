@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign Up - CV Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  :focus-visible { outline: 2px solid #818cf8; outline-offset: 2px; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #090d16;
+    color: #f1f5f9;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .auth-wrap {
+    width: 380px;
+    max-width: 92vw;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 15px;
+    color: #fff;
+  }
+
+  .brand-name { font-size: 17px; font-weight: 700; color: #ffffff; letter-spacing: -0.2px; }
+
+  .auth-card {
+    background: #111a2e;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 30px 28px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    text-align: center;
+    color: #ffffff;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 13.5px;
+    margin: 0 0 22px;
+  }
+
+  .flash-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .flash-msg {
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    border: 1px solid transparent;
+  }
+  .flash-error {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+  }
+  .flash-success {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #34d399;
+  }
+
+  label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+
+  input[type="email"],
+  input[type="password"] {
+    width: 100%;
+    background: #17243c;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: #ffffff;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+  }
+  input[type="email"]::placeholder,
+  input[type="password"]::placeholder { color: #5b6982; }
+  input[type="email"]:focus,
+  input[type="password"]:focus {
+    outline: none;
+    border-color: #6366f1;
+    background: #1c2c4c;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  }
+
+  button[type="submit"] {
+    width: 100%;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 13px;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    transition: all 0.2s ease;
+    margin-top: 4px;
+  }
+  button[type="submit"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+  }
+
+  .switch-link {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13.5px;
+    color: #64748b;
+  }
+  .switch-link a {
+    color: #818cf8;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .switch-link a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+  <div class="auth-wrap">
+    <div class="brand">
+      <div class="brand-mark">CV</div>
+      <div class="brand-name">CV Assistant</div>
+    </div>
+
+    <div class="auth-card">
+      <h1>Create Account</h1>
+      <p class="subtitle">Sign up to start using your recruiter workspace</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-list">
+            {% for category, msg in messages %}
+              <div class="flash-msg {{ 'flash-error' if category == 'error' else 'flash-success' }}">{{ msg }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST">
+        <label for="email">Email</label>
+        <input type="email" name="email" id="email" placeholder="you@example.com" required autofocus>
+
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" placeholder="At least 6 characters" required minlength="6">
+
+        <label for="confirm_password">Confirm Password</label>
+        <input type="password" name="confirm_password" id="confirm_password" placeholder="Re-enter your password" required minlength="6">
+
+        <button type="submit">Create Account</button>
+      </form>
+
+      <div class="switch-link">Already have an account? <a href="{{ url_for('login') }}">Log in</a></div>
+    </div>
+  </div>
+
+</body>
+</html>

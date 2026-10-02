@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review Candidate</title>
+{% include "_dashboard_style.html" %}
+</head>
+<body>
+  <div class="wrap" style="max-width: 560px;">
+
+    <div class="top-row">
+      <div>
+        <h1>Review Extracted Details</h1>
+        <p class="subtitle">The AI only pulled facts from the CV. Correct anything before saving.</p>
+      </div>
+      <div class="nav-links">
+        <a class="nav-link" href="{{ url_for('dashboard') }}">← Dashboard</a>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-list">
+          {% for category, msg in messages %}
+            <div class="flash-msg {{ 'flash-error' if category == 'error' else 'flash-success' }}">{{ msg }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="card">
+      <form method="POST" action="{{ url_for('confirm_candidate') }}">
+        <label class="field-label" for="name">Full name</label>
+        {% if not extracted.name %}
+          <p class="field-hint field-missing">⚠️ Not found in the CV -- please fill it in.</p>
+        {% endif %}
+        <input type="text" id="name" name="name" value="{{ extracted.name or '' }}" required>
+
+        <label class="field-label" for="email">Email</label>
+        {% if not extracted.email %}
+          <p class="field-hint field-missing">⚠️ Not found in the CV -- fill in if known, or leave blank.</p>
+        {% endif %}
+        <input type="email" id="email" name="email" value="{{ extracted.email or '' }}">
+
+        <label class="field-label" for="status">Starting status</label>
+        <select id="status" name="status">
+          {% for s in statuses %}
+            <option value="{{ s }}" {{ 'selected' if s == 'Applied' }}>{{ s }}</option>
+          {% endfor %}
+        </select>
+        <p class="field-hint">Set by you, the recruiter -- the AI never chooses this.</p>
+
+        <label class="field-label">CV file</label>
+        <input type="text" value="{{ extracted.cv_file }}" disabled>
+        <input type="hidden" name="cv_file" value="{{ extracted.cv_file }}">
+
+        <button type="submit" class="btn-primary">Confirm &amp; Save</button>
+      </form>
+    </div>
+
+  </div>
+</body>
+</html>
